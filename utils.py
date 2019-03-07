@@ -223,7 +223,7 @@ def compare_dicts(real, decl):
     #                     ret["matches"] = {}
     #                 ret["matches"][key] = comp[k]
 
-    print(json.dumps(state, indent=4, sort_keys=True))
+    # print(json.dumps(state, indent=4, sort_keys=True))
     return state
 
 
@@ -236,3 +236,33 @@ def find_by_ip(ip, nodes):
         if n.ip == ip:
             return n
     return None
+
+
+def combine_arr_to_node_list(arr):
+    nodes = []
+
+    for row in arr:
+        loc_ip = row["loc_ip"]
+        loc_port = row["loc_port"]
+        rem_port = row["rem_port"]
+        rem_ip = row["rem_ip"]
+
+        n = find_by_ip(loc_ip, nodes)
+        if n is None:
+            model = row["model"]
+            name = row["name"]
+            descr = row["descr"]
+            ports = {}
+            ports[loc_port] = {
+                "ip": rem_ip,
+                "port": rem_port
+            }
+            n = node.Node(loc_ip, model, name, descr, ports)
+            nodes.append(n)
+        else:
+            n.ports[loc_port] = {
+                "ip": rem_ip,
+                "port": rem_port
+            }
+
+    return nodes

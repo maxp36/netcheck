@@ -6,6 +6,7 @@ from pysnmp.hlapi import *
 import node
 import oids
 import utils
+import db
 
 
 def fetch_nodes(ip):
@@ -19,16 +20,6 @@ def fetch_nodes(ip):
             fetch_nodes(i)
 
 
-def print_nodes(nodes):
-    for n in nodes:
-        n.print()
-
-
-def print_nodes_min(nodes):
-    for n in nodes:
-        n.print_min()
-
-
 nodes = []
 nodes_ips = []
 
@@ -39,16 +30,23 @@ if __name__ == "__main__":
         '-a', '--ip', help='IP address of the switch from which data collection begins')
 
     args = parser.parse_args()
-    print(args)
+    # print(args)
 
-    # get_nodes('172.16.250.253')
     fetch_nodes(args.ip)
     print(nodes_ips, "\n")
-#     print_nodes_min(nodes)
 
     utils.make_snapshot(nodes)
 
-    snapshot = utils.load_snapshot()
-    print_nodes_min(snapshot)
-    state = utils.compare_networks(nodes, snapshot)
-    utils.save_state(state)
+    # snapshot = utils.load_snapshot()
+    # node.print_nodes_min(snapshot)
+    # state = utils.compare_networks(nodes, snapshot)
+    # utils.save_state(state)
+
+    # node_rows = db.get_info()
+    # node_list = utils.combine_arr_to_node_list(node_rows)
+
+    # dir_path = "./db_schema/"
+    # file_name = dir_path + "node_list.json"
+    # with utils.safe_open_w(file_name) as file:
+    #     json.dump(node_list, file, default=node.encode,
+    #               sort_keys=True, indent=4)

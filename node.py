@@ -9,76 +9,27 @@ import utils
 
 
 class Node:
-    def __init__(self, ip="", model="", sys_name="", sys_desc="", sys_cap_supported="", sys_cap_enabled="", loc_ports=None):
+    def __init__(self,
+        ip="", 
+        model="", 
+        name="", 
+        desc="", 
+        # cap_supported="", 
+        # cap_enabled="", 
+        ports=None):
         self.ip = ip
         self.model = model
-        self.sys_name = sys_name
-        self.sys_desc = sys_desc
-        self.sys_cap_supported = sys_cap_supported
-        self.sys_cap_enabled = sys_cap_enabled
-        self.loc_ports = {} if loc_ports is None else loc_ports
-        # self.__chassisIdSubtype
-        # self.__chassisId
-        # self.__sysName = ""
-        # self.__sysDesc = ""
-        # self.__sysCapSupported = ""
-        # self.__sysCapEnabled = ""
-
-        # self.__manAddrLen = ""
-        # self.__manAddrIfSubtype = ""
-        # self.__manAddrIfId = ""
-        # self.__manAddrOID = ""
+        self.name = name
+        self.desc = desc
+        # self.cap_supported = cap_supported
+        # self.cap_enabled = cap_enabled
+        self.ports = {} if ports is None else ports
 
         self.rem_ips = []
-        # self.loc_ports = {}
 
         self.cap_bits = Bits.withNamedBits(repeater=1, bridge=2)
 
-        # self.__ip = ".".join([str(x) for x in tuple(manAddrLen[0])[-4:]])
-
-        # self.__get_info()
-
-    # def getChassisIdSubtype(self):
-    #     return self.chassis_id_subtype[1].prettyPrint()
-
-    # def getChassisId(self):
-    #     return self.chassis_id[1].prettyPrint()
-
-    # def getSysName(self):
-    #     return self.sys_name[1].prettyPrint()
-
-    # def getSysDesc(self):
-    #     return self.sys_desc[1].prettyPrint()
-
-    # def getSysCapSupported(self):
-    #     return self.cap_bits(self.sys_cap_supported[1]).prettyPrint()
-
-    # def getSysCapEnabled(self):
-    #     return self.cap_bits(self.sys_cap_enabled[1]).prettyPrint()
-
-    # def getManAddrLen(self):
-    #     return self.man_addr_len[1].prettyPrint()
-
-    # def getManAddrIfSubtype(self):
-    #     return self.__manAddrIfSubtype[1].prettyPrint()
-
-    # def getManAddrIfId(self):
-    #     return self.man_addr_if_id[1].prettyPrint()
-
-    # def getManAddrOID(self):
-    #     return "." + self.man_addr_oid[1].prettyPrint()
-
-    # def getIP(self):
-    #     return self.ip
-
-    # def getRemIPs(self):
-    #     return self.rem_ips
-
-    # def getLocPorts(self):
-    #     return self.loc_ports
-
-    # def getModel(self):
-    #     return self.model
+        self.max_num_ports = 50
 
     def fetch(self):
         engine = SnmpEngine()
@@ -104,10 +55,10 @@ class Node:
         vars = utils.get_snmp_var_binds(g)
         self.chassis_id_subtype = vars[0][1].prettyPrint()
         self.chassis_id = vars[1][1].prettyPrint()
-        self.sys_name = vars[2][1].prettyPrint()
-        self.sys_desc = vars[3][1].prettyPrint()
-        self.sys_cap_supported = self.cap_bits(vars[4][1]).prettyPrint()
-        self.sys_cap_enabled = self.cap_bits(vars[5][1]).prettyPrint()
+        self.name = vars[2][1].prettyPrint()
+        self.desc = vars[3][1].prettyPrint()
+        # self.cap_supported = self.cap_bits(vars[4][1]).prettyPrint()
+        # self.cap_enabled = self.cap_bits(vars[5][1]).prettyPrint()
 
         # получение данных о локальном адресе управления
         g = nextCmd(engine,
@@ -127,7 +78,7 @@ class Node:
                     CommunityData('unisnet'),
                     UdpTransportTarget((self.ip, 161)),
                     ContextData(),
-                    0, 28,
+                    0, self.max_num_ports,
                     ObjectType(ObjectIdentity(oids.local_system_data_oids['lldpRemManAddrIfSubtype'])))
 
         oid = utils.get_snmp_var_binds(g)[0][0]
@@ -135,8 +86,8 @@ class Node:
             loc_port = str(tuple(oid)[-8])
             rem_ip = ".".join([str(x) for x in tuple(oid)[-4:]])
             self.rem_ips.append(rem_ip)
-            self.loc_ports[loc_port] = {}
-            self.loc_ports[loc_port]["ip"] = rem_ip
+            self.ports[loc_port] = {}
+            self.ports[loc_port]["ip"] = rem_ip
             oid = utils.get_snmp_var_binds(g)[0][0]
 
         # получение описания и номера порта коммутатора-соседа на определенном локальном порту
@@ -144,7 +95,7 @@ class Node:
                     CommunityData('unisnet'),
                     UdpTransportTarget((self.ip, 161)),
                     ContextData(),
-                    0, 28,
+                    0, self.max_num_ports,
                     ObjectType(ObjectIdentity(oids.local_system_data_oids['lldpRemPortDesc'])))
 
         vars = utils.get_snmp_var_binds(g)[0]
@@ -152,8 +103,8 @@ class Node:
         while tuple(oid)[-4] == 8:
             loc_port = str(tuple(oid)[-2])
             rem_port = desc.split('Port ')[1].split(' ')[0]
-            self.loc_ports[loc_port]["remPortDesc"] = desc
-            self.loc_ports[loc_port]["remPort"] = rem_port
+            # self.ports[loc_port]["portDesc"] = desc
+            self.ports[loc_port]["port"] = rem_port
             vars = utils.get_snmp_var_binds(g)[0]
             oid, desc = vars[0], vars[1].prettyPrint()
 
@@ -172,40 +123,48 @@ class Node:
               "model : ", self.model, "\n",
               "lldpLocChassisIdSubtype : ", self.chassis_id_subtype, "\n",
               "lldpLocChassisId : ", self.chassis_id, "\n",
-              "lldpLocSysName : ", self.sys_name, "\n",
-              "lldpLocSysDesc : ", self.sys_desc, "\n",
-              "lldpLocSysCapSupported : ", self.sys_cap_supported, "\n",
-              "lldpLocSysCapEnabled : ", self.sys_cap_enabled, "\n",
+              "lldpLocSysName : ", self.name, "\n",
+              "lldpLocSysDesc : ", self.desc, "\n",
+            #   "lldpLocSysCapSupported : ", self.cap_supported, "\n",
+            #   "lldpLocSysCapEnabled : ", self.cap_enabled, "\n",
               "lldpLocManAddrLen : ", self.man_addr_len, "\n",
               "lldpLocManAddrIfSubtype : ", self.man_addr_if_subtype, "\n",
               "lldpLocManAddrIfId : ", self.man_addr_if_id, "\n",
               "lldpLocManAddrOID : ", self.man_addr_oid, "\n",
               "lldpRemManAddrs : ", self.rem_ips, "\n",
-              "locPorts : ", json.dumps(self.loc_ports, sort_keys=True, indent=4), "\n")
+              "locPorts : ", json.dumps(self.ports, sort_keys=True, indent=4), "\n")
 
     def print_min(self):
         print("[", self.ip, "]\n",
               "model : ", self.model, "\n",
-              "lldpLocSysName : ", self.sys_name, "\n",
-              "lldpLocSysDesc : ", self.sys_desc, "\n",
-              "lldpLocSysCapSupported : ", self.sys_cap_supported, "\n",
-              "lldpLocSysCapEnabled : ", self.sys_cap_enabled, "\n",
-              "locPorts : ", json.dumps(self.loc_ports, sort_keys=True, indent=4), "\n")
+              "name : ", self.name, "\n",
+              "desc : ", self.desc, "\n",
+            #   "capSupported : ", self.cap_supported, "\n",
+            #   "capEnabled : ", self.cap_enabled, "\n",
+              "ports : ", json.dumps(self.ports, sort_keys=True, indent=4), "\n")
 
 
 def encode(node):
     return {
         "ip": node.ip,
         "model": node.model,
-        "lldpLocSysName": node.sys_name,
-        "lldpLocSysDesc": node.sys_desc,
-        "lldpLocSysCapSupported": node.sys_cap_supported,
-        "lldpLocSysCapEnabled": node.sys_cap_enabled,
-        "locPorts": node.loc_ports
+        "name": node.name,
+        "desc": node.desc,
+        "ports": node.ports
     }
 
 
 def decode(node):
-    if "locPorts" in node:
-        return Node(node["ip"], node["model"], node["lldpLocSysName"], node["lldpLocSysDesc"], node["lldpLocSysCapSupported"], node["lldpLocSysCapEnabled"], node["locPorts"])
+    if "ports" in node:
+        return Node(node["ip"], node["model"], node["name"], node["desc"], node["ports"])
     return node
+
+
+def print_nodes(nodes):
+    for n in nodes:
+        n.print()
+
+
+def print_nodes_min(nodes):
+    for n in nodes:
+        n.print_min()

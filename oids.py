@@ -1,4 +1,11 @@
 
+# lldp_config = {
+#     "lldpMessageTxInterval": 
+# }
+
+
+
+
 local_system_data_oids = {
     "lldpLocalSystemData": ".1.0.8802.1.1.2.1.3",
 
