@@ -4,6 +4,10 @@
 # }
 
 
+snmpv2mibs_oids = {
+    "sysDescr": ".1.3.6.1.2.1.1.1.0"
+}
+
 
 
 local_system_data_oids = {
