@@ -9,9 +9,8 @@ import utils
 
 
 class Node:
-    def __init__(self, ip="", model="", name="", ports=None):
+    def __init__(self, ip="", name="", ports=None):
         self.ip = ip
-        self.model = model
         self.name = name
         self.ports = {} if ports is None else ports
 
@@ -88,29 +87,13 @@ class Node:
                 else:
                     break
 
-        # получение модели коммутатора
-        g = getCmd(engine,
-                   CommunityData('unisnet'),
-                   UdpTransportTarget((self.ip, 161)),
-                   ContextData(),
-                   ObjectType(ObjectIdentity(oids.snmpv2mibs_oids["sysDescr"])))
-        # TODO
-        vals = utils.get_snmp_var_binds(g)
-        if len(vals) != 0:
-            model = vals[0][1].prettyPrint().split(' ')
-            if model[0] == "D-Link":
-                self.model = model[1]
-            else:
-                self.model = model[0]
-
     def print(self):
         print("[", self.ip, "]\n",
-              "model : ", self.model, "\n",
               "name : ", self.name, "\n",
               "ports : ", json.dumps(self.ports, sort_keys=True, indent=4), "\n")
 
     def is_empty(self):
-        if self.model == "" or self.name == "" or len(self.ports.keys()) == 0:
+        if self.name == "" or len(self.ports.keys()) == 0:
             return True
         else:
             return False
@@ -119,7 +102,6 @@ class Node:
 def encode(node):
     return {
         "ip": node.ip,
-        "model": node.model,
         "name": node.name,
         "ports": node.ports
     }
@@ -127,7 +109,7 @@ def encode(node):
 
 def decode(node):
     if "ports" in node:
-        return Node(node["ip"], node["model"], node["name"], node["ports"])
+        return Node(node["ip"], node["name"], node["ports"])
     return node
 
 

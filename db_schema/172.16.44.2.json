@@ -1,0 +1,10 @@
+[
+    {
+        "loc_ip": "172.16.44.2",
+        "loc_name": "sw156",
+        "rem_port": 25,
+        "rem_ip": "172.16.44.3",
+        "rem_name": "sw104",
+        "loc_port": 25
+    }
+]

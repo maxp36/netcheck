@@ -1,0 +1,186 @@
+[
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 28,
+        "rem_ip": "172.16.38.102",
+        "rem_name": "sw42",
+        "loc_port": 1
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 25,
+        "rem_ip": "172.16.2.61",
+        "rem_name": "sw54",
+        "loc_port": 2
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 28,
+        "rem_ip": "172.16.50.56",
+        "rem_name": "sw11",
+        "loc_port": 3
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 25,
+        "rem_ip": "172.16.50.44",
+        "rem_name": "sw36",
+        "loc_port": 4
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 25,
+        "rem_ip": "172.16.48.25",
+        "rem_name": "sw39",
+        "loc_port": 5
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 28,
+        "rem_ip": "172.16.46.99",
+        "rem_name": "sw222",
+        "loc_port": 6
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 27,
+        "rem_ip": "172.16.44.14",
+        "rem_name": "sw50",
+        "loc_port": 7
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 26,
+        "rem_ip": "172.16.36.111",
+        "rem_name": "sw53",
+        "loc_port": 9
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 25,
+        "rem_ip": "172.16.44.19",
+        "rem_name": "sw81",
+        "loc_port": 10
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 27,
+        "rem_ip": "172.16.110.28",
+        "rem_name": "sw281",
+        "loc_port": 11
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 28,
+        "rem_ip": "172.16.10.80",
+        "rem_name": "sw97",
+        "loc_port": 12
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 28,
+        "rem_ip": "172.16.56.76",
+        "rem_name": "sw120",
+        "loc_port": 13
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 25,
+        "rem_ip": "172.16.14.79",
+        "rem_name": "sw227",
+        "loc_port": 14
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 25,
+        "rem_ip": "172.16.64.31",
+        "rem_name": "sw160",
+        "loc_port": 15
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 26,
+        "rem_ip": "172.16.62.135",
+        "rem_name": "sw138",
+        "loc_port": 16
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 28,
+        "rem_ip": "172.16.40.106",
+        "rem_name": "sw237",
+        "loc_port": 17
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 25,
+        "rem_ip": "172.16.54.36",
+        "rem_name": "sw207",
+        "loc_port": 18
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 25,
+        "rem_ip": "172.16.68.63",
+        "rem_name": "sw202",
+        "loc_port": 19
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 12,
+        "rem_ip": "172.16.0.6",
+        "rem_name": "csw6",
+        "loc_port": 22
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 1,
+        "rem_ip": "172.23.2.2",
+        "rem_name": "ups6",
+        "loc_port": 23
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 25,
+        "rem_ip": "172.16.42.38",
+        "rem_name": "sw55",
+        "loc_port": 24
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 26,
+        "rem_ip": "172.16.0.5",
+        "rem_name": "csw5",
+        "loc_port": 25
+    },
+    {
+        "loc_ip": "172.16.0.2",
+        "loc_name": "csw2",
+        "rem_port": 27,
+        "rem_ip": "172.16.0.1",
+        "rem_name": "csw1",
+        "loc_port": 27
+    }
+]

@@ -1,0 +1,34 @@
+[
+    {
+        "loc_ip": "172.16.44.9",
+        "loc_name": "sw168",
+        "rem_port": 27,
+        "rem_ip": "172.16.44.13",
+        "rem_name": "sw62",
+        "loc_port": 25
+    },
+    {
+        "loc_ip": "172.16.44.9",
+        "loc_name": "sw168",
+        "rem_port": 26,
+        "rem_ip": "172.16.44.10",
+        "rem_name": "sw76",
+        "loc_port": 26
+    },
+    {
+        "loc_ip": "172.16.44.9",
+        "loc_name": "sw168",
+        "rem_port": 25,
+        "rem_ip": "172.16.44.16",
+        "rem_name": "sw63",
+        "loc_port": 27
+    },
+    {
+        "loc_ip": "172.16.44.9",
+        "loc_name": "sw168",
+        "rem_port": 27,
+        "rem_ip": "172.16.44.78",
+        "rem_name": "sw06102",
+        "loc_port": 28
+    }
+]

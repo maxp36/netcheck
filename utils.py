@@ -109,7 +109,6 @@ def combine_rows_to_one_node(rows):
 
     row = rows[0]
     n.ip = row["loc_ip"]
-    n.model = row["loc_model"]
     n.name = row["loc_name"]
 
     for row in rows:

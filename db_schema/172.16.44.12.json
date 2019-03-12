@@ -1,0 +1,26 @@
+[
+    {
+        "loc_ip": "172.16.44.12",
+        "loc_name": "sw73",
+        "rem_port": 28,
+        "rem_ip": "172.16.44.14",
+        "rem_name": "sw50",
+        "loc_port": 25
+    },
+    {
+        "loc_ip": "172.16.44.12",
+        "loc_name": "sw73",
+        "rem_port": 25,
+        "rem_ip": "172.16.44.11",
+        "rem_name": "sw187",
+        "loc_port": 26
+    },
+    {
+        "loc_ip": "172.16.44.12",
+        "loc_name": "sw73",
+        "rem_port": 28,
+        "rem_ip": "172.16.44.20",
+        "rem_name": "sw77",
+        "loc_port": 27
+    }
+]
