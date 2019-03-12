@@ -3,52 +3,33 @@ import node
 
 
 class NetworkComparator:
-    def __init__(self, db):
-        self.db = db
 
-        self.nodes_ips = []
-        self.state = {
+    def compare(self, real, decl):
+        state = {
             "differences": [],
             "matches": [],
             "not found": [],
             "not declared": []
         }
 
-    def compare(self, ip):
-        self.nodes_ips.append(ip)
+        for d in decl:
+            r = self.__find_by_ip(d.ip, real)
+            if r is None:
+                state["not found"].append(node.encode(d))
+                continue
 
-        real = node.Node(ip)
-        real.fetch()
-        # self.nodes.append(n)
-
-        decl = self.db.get_node(ip)
-        decl = utils.combine_rows_to_one_node(decl)
-        # decl = node.decode(decl)
-
-        # print("real")
-        # real.print()
-
-        # print("decl")
-        # decl.print()
-
-        if real.is_empty() and not decl.is_empty():
-            self.state["not found"].append(node.encode(decl))
-
-        elif decl.is_empty() and not real.is_empty():
-            self.state["not declared"].append(node.encode(real))
-
-        else:
-            comp = self.__compare_entities(real, decl)
+            comp = self.__compare_entities(r, d)
             if "differences" in comp.keys():
-                self.state["differences"].append(comp)
+                state["differences"].append(comp)
             else:
-                self.state["matches"].append(comp["matches"])
+                state["matches"].append(comp["matches"])
 
-        for i in real.rem_ips:
-            if not (i in self.nodes_ips):
-                self.compare(i)
+        for r in real:
+            d = self.__find_by_ip(r.ip, decl)
+            if d is None:
+                state["not declared"].append(node.encode(r))
 
-        return self.state
+        return state
 
     def __compare_entities(self, real, decl):
         if not isinstance(real, type(decl)):
@@ -128,3 +109,9 @@ class NetworkComparator:
                 state["differences"]["not declared"][key] = real[key]
 
         return state
+
+    def __find_by_ip(self, ip, nodes):
+        for n in nodes:
+            if n.ip == ip:
+                return n
+        return None

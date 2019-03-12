@@ -397,7 +397,7 @@ from (select device.name as name,
             inner join interface on device.id = interface.device_id)
             inner join device_connection on interface.id = device_connection.link2_id)) remote_device
 
-where local_device.link = remote_device.link and local_device.ip = '172.16.0.1'
+where local_device.link = remote_device.link and local_device.ip = '172.16.0.1' and not local_device.name like 'csw%' 
 
 union all
 
@@ -424,6 +424,6 @@ from (select device.name as name,
             inner join interface on device.id = interface.device_id)
             inner join device_connection on interface.id = device_connection.link1_id)) remote_device
 
-where local_device.link = remote_device.link and local_device.ip = '172.16.0.1'
+where local_device.link = remote_device.link and local_device.ip = '172.16.0.1' and not local_device.name like 'csw%' 
 
 order by loc_port;

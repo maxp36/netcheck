@@ -1,5 +1,6 @@
 
 import json
+import re
 
 from pysnmp.hlapi import *
 from pysnmp.proto.rfc1902 import *
@@ -17,7 +18,7 @@ class Node:
         self.rem_ips = []
         self.max_num_ports = 256
 
-    def fetch(self):
+    def fetch(self, expose_name):
         engine = SnmpEngine()
 
         # получение локальных данных коммутатора
@@ -29,6 +30,11 @@ class Node:
         vals = utils.get_snmp_var_binds(g)
         if len(vals) != 0:
             self.name = vals[0][1].prettyPrint()
+            if re.fullmatch(expose_name, self.name):
+                self.ip = ""
+                self.name = ""
+                self.ports = {}
+                return
 
         # получение IP коммутаторов-соседей и номеров локальных портов, к которым они подключенны
         g = bulkCmd(engine,

@@ -36,42 +36,31 @@ def safe_open_w(path):
     return open(path, 'w')
 
 
-def make_snapshot(nodes, ip):
-    current_time = time.strftime("%Y-%m-%d_%H-%M")
-    dir_path = "./declared/"
-    file_name = dir_path + ip + "_snapshot_" + current_time + ".json"
-    with safe_open_w(file_name) as file:
-        json.dump(nodes, file, default=node.encode,
-                  sort_keys=True, indent=4)
-
-    file_name = dir_path + "last_snapshot.json"
-    with safe_open_w(file_name) as file:
-        json.dump(nodes, file, default=node.encode,
-                  sort_keys=True, indent=4)
+def write_file_json(path, data, func=None):
+    with safe_open_w(path) as file:
+        json.dump(data, file, default=func, sort_keys=True, indent=4)
 
 
-def load_snapshot():
-    dir_path = "./declared/"
-    file_name = dir_path + "last_snapshot.json"
-    with open(file_name) as file:
-        return json.load(file, object_hook=node.decode)
+def read_file_json(path, func=None):
+    with open(path) as file:
+        return json.load(file, object_hook=func)
 
 
-def save_state(state):
-    current_time = time.strftime("%Y-%m-%d_%H-%M")
-    dir_path = "./real/"
-    file_name = dir_path + "state_" + current_time + ".json"
-    with safe_open_w(file_name) as file:
-        json.dump(state, file, sort_keys=True, indent=4)
+def make_snapshot(path,  data):
+    # current_time = time.strftime("%Y-%m-%d_%H-%M")
+    write_file_json(path, data, node.encode)
 
 
+def load_snapshot(path):
+    return read_file_json(path, node.decode)
 
 
-def find_by_ip(ip, nodes):
-    for n in nodes:
-        if n.ip == ip:
-            return n
-    return None
+# def save_state(state):
+#     current_time = time.strftime("%Y-%m-%d_%H-%M")
+#     dir_path = "./real/"
+#     file_name = dir_path + "state_" + current_time + ".json"
+#     with safe_open_w(file_name) as file:
+#         json.dump(state, file, sort_keys=True, indent=4)
 
 
 # def combine_arr_to_node_list(arr):
@@ -116,6 +105,8 @@ def combine_rows_to_one_node(rows):
         rem_name = row["rem_name"]
         rem_port = row["rem_port"]
         rem_ip = row["rem_ip"]
+
+        n.rem_ips.append(rem_ip)
 
         n.ports[loc_port] = {
             "name": rem_name,

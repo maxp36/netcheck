@@ -10,7 +10,7 @@ class NodeDB:
         self.password = password
         self.db = db
 
-    def get_node(self, ip):
+    def get_node(self, ip, expose_name):
         conn = pymysql.connect(host=self.host,
                                user=self.user,
                                password=self.password,
@@ -46,7 +46,7 @@ class NodeDB:
                             inner join interface on device.id = interface.device_id)
                             inner join device_connection on interface.id = device_connection.link2_id)) remote_device
 
-                where local_device.link = remote_device.link and local_device.ip = %s
+                where local_device.link = remote_device.link and local_device.ip = %s and not local_device.name like %s 
 
                 union all
 
@@ -73,11 +73,11 @@ class NodeDB:
                             inner join interface on device.id = interface.device_id)
                             inner join device_connection on interface.id = device_connection.link1_id)) remote_device
 
-                where local_device.link = remote_device.link and local_device.ip = %s
+                where local_device.link = remote_device.link and local_device.ip = %s and not local_device.name like %s 
 
                 order by loc_port;"""
 
-                cursor.execute(sql, (ip, ip,))
+                cursor.execute(sql, (ip, expose_name, ip, expose_name))
                 result = cursor.fetchall()
 
                 dir_path = "./db_schema/"
