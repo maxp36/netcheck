@@ -1,0 +1,19 @@
+{
+  db: {
+    host: 94.230.160.137
+    user: nms_tplg
+    pass: choorohgae5Hiiy
+    name: nms
+  }
+
+  hosts: [
+    {
+      host: 172.16.44.14
+      exclude_ports: []
+    }
+  ]
+
+  exclude_hosts_by_ip: []
+
+  exclude_hosts_by_name: []
+}
