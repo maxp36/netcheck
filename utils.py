@@ -47,49 +47,12 @@ def read_file_json(path, func=None):
 
 
 def make_snapshot(path,  data):
-    # current_time = time.strftime("%Y-%m-%d_%H-%M")
     write_file_json(path, data, node.encode)
 
 
 def load_snapshot(path):
     return read_file_json(path, node.decode)
 
-
-# def save_state(state):
-#     current_time = time.strftime("%Y-%m-%d_%H-%M")
-#     dir_path = "./real/"
-#     file_name = dir_path + "state_" + current_time + ".json"
-#     with safe_open_w(file_name) as file:
-#         json.dump(state, file, sort_keys=True, indent=4)
-
-
-# def combine_arr_to_node_list(arr):
-#     nodes = []
-
-#     for row in arr:
-#         loc_ip = row["loc_ip"]
-#         loc_port = row["loc_port"]
-#         rem_port = row["rem_port"]
-#         rem_ip = row["rem_ip"]
-
-#         n = find_by_ip(loc_ip, nodes)
-#         if n is None:
-#             model = row["model"]
-#             name = row["name"]
-#             ports = {}
-#             ports[loc_port] = {
-#                 "ip": rem_ip,
-#                 "port": rem_port
-#             }
-#             n = node.Node(loc_ip, model, name, ports)
-#             nodes.append(n)
-#         else:
-#             n.ports[loc_port] = {
-#                 "ip": rem_ip,
-#                 "port": rem_port
-#             }
-
-#     return nodes
 
 def combine_rows_to_one_node(rows):
     n = node.Node()
@@ -115,3 +78,19 @@ def combine_rows_to_one_node(rows):
         }
 
     return n
+
+
+def is_limited_port(port, limitation):
+    check_ports = limitation['check_ports']
+    exclude_ports = limitation['exclude_ports']
+    if len(check_ports) == 0:
+        if len(exclude_ports) == 0:
+            return False
+        else:
+            if not port in exclude_ports:
+                return False
+    else:
+        if port in check_ports and not port in exclude_ports:
+            return False
+
+    return True

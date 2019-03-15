@@ -8,12 +8,35 @@
 
   hosts: [
     {
-      host: 172.16.44.14
-      exclude_ports: []
+      host: 172.16.0.2
+      limitations: [
+        {
+          host: 172.16.0.2
+          aliases: [
+            172.16.44.1
+          ]
+          check_ports: [7, 10]
+          exclude_ports:[]
+        }
+        {
+          host: 172.16.44.7
+          aliases: [
+          ]
+          check_ports: []
+          exclude_ports:[28]
+        }
+        {
+          host: 172.16.44.9
+          aliases: [
+          ]
+          check_ports: [26]
+          exclude_ports:[]
+        }
+      ]
     }
   ]
 
-  exclude_hosts_by_ip: []
+  // exclude_hosts_by_ip: []
 
-  exclude_hosts_by_name: []
+  // exclude_hosts_by_name: []
 }

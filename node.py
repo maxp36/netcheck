@@ -18,7 +18,7 @@ class Node:
         self.rem_ips = []
         self.max_num_ports = 256
 
-    def fetch(self, expose_name):
+    def fetch(self, limitation):
         engine = SnmpEngine()
 
         # получение локальных данных коммутатора
@@ -30,11 +30,11 @@ class Node:
         vals = utils.get_snmp_var_binds(g)
         if len(vals) != 0:
             self.name = vals[0][1].prettyPrint()
-            if re.fullmatch(expose_name, self.name):
-                self.ip = ""
-                self.name = ""
-                self.ports = {}
-                return
+            # if re.fullmatch(expose_name, self.name):
+            #     self.ip = ""
+            #     self.name = ""
+            #     self.ports = {}
+            #     return
 
         # получение IP коммутаторов-соседей и номеров локальных портов, к которым они подключенны
         g = bulkCmd(engine,
@@ -49,14 +49,20 @@ class Node:
             while tuple(oid)[-10] == 3:
                 loc_port = int(tuple(oid)[-8])
                 rem_ip = ".".join([str(x) for x in tuple(oid)[-4:]])
-                self.rem_ips.append(rem_ip)
+
+                # ограничиваем обход согласно конфигу
+                if limitation is None:
+                    self.rem_ips.append(rem_ip)
+                else:
+                    if not utils.is_limited_port(loc_port, limitation):
+                        self.rem_ips.append(rem_ip)
 
                 # получение имени коммутатора-соседа на порту loc_port
                 gen = getCmd(engine,
-                            CommunityData('unisnet'),
-                            UdpTransportTarget((rem_ip, 161)),
-                            ContextData(),
-                            ObjectType(ObjectIdentity(oids.local_system_data_oids['lldpLocSysName'])))
+                             CommunityData('unisnet'),
+                             UdpTransportTarget((rem_ip, 161)),
+                             ContextData(),
+                             ObjectType(ObjectIdentity(oids.local_system_data_oids['lldpLocSysName'])))
                 rem_name = utils.get_snmp_var_binds(gen)[0][1].prettyPrint()
 
                 if not (loc_port in self.ports.keys()):

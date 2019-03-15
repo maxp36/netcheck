@@ -427,3 +427,62 @@ from (select device.name as name,
 where local_device.link = remote_device.link and local_device.ip = '172.16.0.1' and not local_device.name like 'csw%' 
 
 order by loc_port;
+
+-- 
+-- 
+-- 
+
+
+select local_device.name as loc_name,  
+      local_device.ip as loc_ip, 
+      local_device.port as loc_port, 
+	remote_device.name as rem_name, 
+      remote_device.ip as rem_ip,
+      remote_device.port as rem_port
+
+from (select device.name as name, 
+            device.ip as ip,
+            interface.index as port,
+            device_connection.link2_id as link
+      from ((device
+            inner join interface on device.id = interface.device_id)
+            inner join device_connection on interface.id = device_connection.link1_id)) local_device,
+
+      (select device.name as name,
+	  	device.ip as ip,
+            interface.index as port,
+            device_connection.link2_id as link
+      from ((device
+            inner join interface on device.id = interface.device_id)
+            inner join device_connection on interface.id = device_connection.link2_id)) remote_device
+
+where local_device.link = remote_device.link and local_device.ip = '172.16.0.1' and local_device.port ### 
+
+union all
+
+select local_device.name as loc_name, 
+      local_device.ip as loc_ip, 
+      local_device.port as loc_port,
+	  remote_device.name as rem_name, 
+      remote_device.ip as rem_ip,
+      remote_device.port as rem_port
+
+from (select device.name as name, 
+            device.ip as ip,
+            interface.index as port,
+            device_connection.link1_id as link
+      from ((device
+            inner join interface on device.id = interface.device_id)
+            inner join device_connection on interface.id = device_connection.link2_id)) local_device,
+
+      (select device.name as name,
+	  	device.ip as ip,
+            interface.index as port,
+            device_connection.link1_id as link
+      from ((device
+            inner join interface on device.id = interface.device_id)
+            inner join device_connection on interface.id = device_connection.link1_id)) remote_device
+
+where local_device.link = remote_device.link and local_device.ip = '172.16.0.1' and local_device.port ### 
+
+order by loc_port;

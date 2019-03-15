@@ -5,6 +5,7 @@ import hjson
 from pysnmp.hlapi import *
 
 import compare
+import config
 import db
 import node
 import oids
@@ -13,66 +14,87 @@ import utils
 VERSION = 'v0.1.0'
 
 
-def fetch_nodes_snmp(ip, nodes, nodes_ips, expose_name='.*'):
+def find_limitations_by_ip(host, limitations):
+    for l in limitations:
+        if l['host'] == host:
+            return l
+    return None
+
+
+def fetch_nodes_snmp(ip, nodes, nodes_ips, limitations):
+    limitation = find_limitations_by_ip(ip, limitations)
+
     n = node.Node(ip)
-    n.fetch(expose_name)
+    n.fetch(limitation)
     if not n.is_empty():
         nodes.append(n)
     nodes_ips.append(ip)
 
+    if not limitation is None:
+        aliases = limitation['aliases']
+        for a in aliases:
+            nodes_ips.append(a)
+
     for i in n.rem_ips:
         if not (i in nodes_ips):
             nodes, nodes_ips = fetch_nodes_snmp(
-                i, nodes, nodes_ips, expose_name)
+                i, nodes, nodes_ips, limitations)
 
     return nodes, nodes_ips
 
 
-def fetch_nodes_db(ip, nodes, nodes_ips, db, expose_name='%'):
-    print('ip', ip)
-    n = db.get_node(ip, expose_name)
+def fetch_nodes_db(ip, nodes, nodes_ips, node_db, limitations):
+    limitation = find_limitations_by_ip(ip, limitations)
+
+    n = node_db.get_node(ip, limitation)
     n = utils.combine_rows_to_one_node(n)
     if not n.is_empty():
         nodes.append(n)
     nodes_ips.append(ip)
 
+    # скорее всего бесполезно для опроса из БД,
+    # так как в БД каждый коммутатор имеет только один IP
+    # например csw2 имеет IP 172.16.0.2 (не виден по 172.16.44.1)
+    if not limitation is None:
+        aliases = limitation['aliases']
+        for a in aliases:
+            nodes_ips.append(a)
+
     for i in n.rem_ips:
-        if not (i in nodes_ips):
+        if not (i in nodes_ips) and not i is None:
             nodes, nodes_ips = fetch_nodes_db(
-                i, nodes, nodes_ips, db, expose_name)
+                i, nodes, nodes_ips, node_db, limitations)
 
     return nodes, nodes_ips
 
 
-def make_snapshot_snmp(start_ip, path, expose_name='.*'):
+def make_snapshot_snmp(start_ip, path, limitations):
     nodes = []
     nodes_ips = []
-
     nodes, nodes_ips = fetch_nodes_snmp(
-        start_ip, nodes, nodes_ips, expose_name)
+        start_ip, nodes, nodes_ips, limitations)
     utils.make_snapshot(path, nodes)
 
 
-def make_snapshot_db(start_ip, path, db, expose_name='%'):
+def make_snapshot_db(start_ip, path, db, limitations):
     nodes = []
     nodes_ips = []
-
     nodes, nodes_ips = fetch_nodes_db(
-        start_ip, nodes, nodes_ips, db, expose_name)
+        start_ip, nodes, nodes_ips, db, limitations)
     utils.make_snapshot(path, nodes)
 
 
-def compare_real_and_declared(start_ip, real_path, decl_path, result_path, db, expose_name_snmp='.*', expose_name_db='%'):
+def compare_real_and_declared(start_ip, real_path, decl_path, result_path, db, limitations):
     real = []
     nodes_ips = []
     nodes, nodes_ips = fetch_nodes_snmp(
-        start_ip, real, nodes_ips, expose_name_snmp)
+        start_ip, real, nodes_ips, limitations)
     utils.make_snapshot(real_path, nodes)
 
     decl = []
     nodes_ips = []
     nodes, nodes_ips = fetch_nodes_db(
-        start_ip, decl, nodes_ips, db, expose_name_db)
+        start_ip, decl, nodes_ips, db, limitations)
     utils.make_snapshot(decl_path, nodes)
 
     nc = compare.NetworkComparator()
@@ -80,9 +102,9 @@ def compare_real_and_declared(start_ip, real_path, decl_path, result_path, db, e
     utils.make_snapshot(result_path, result)
 
 
-def compare_from_files(path1, path2, result_path):
-    nodes1 = utils.load_snapshot(path1)
-    nodes2 = utils.load_snapshot(path2)
+def compare_from_files(real_path, decl_path, result_path):
+    nodes1 = utils.load_snapshot(real_path)
+    nodes2 = utils.load_snapshot(decl_path)
 
     nc = compare.NetworkComparator()
     result = nc.compare(nodes1, nodes2)
@@ -101,9 +123,17 @@ if __name__ == "__main__":
         title='operations', help='valid operations', dest='operation')
 
     parser_store = subparsers.add_parser(
-        'store', help='perform a real network scan and save the result to a file')
-    parser_store.add_argument(
-        'file', help='result file path (default: %(default)s)', nargs='?', default='./files/store/last.json')
+        'store', help='perform a network scan and save the result to a file')
+    parser_store_source = parser_store.add_subparsers(
+        title='store operation', help='valid sources', dest='source')
+    parser_store_source_real = parser_store_source.add_parser(
+        'real', help='scan the real topology and save the result')
+    parser_store_source_real.add_argument(
+        'file', help='result file path (default: %(default)s)', nargs='?', default='./files/store/real/last.json')
+    parser_store_source_declared = parser_store_source.add_parser(
+        'declared', help='scan the declared topology and save the result')
+    parser_store_source_declared.add_argument(
+        'file', help='result file path (default: %(default)s)', nargs='?', default='./files/store/declared/last.json')
 
     parser_nms = subparsers.add_parser(
         'nms', help='scan the real and documented network, compare the topologies and write the comparison result to a file')
@@ -112,54 +142,74 @@ if __name__ == "__main__":
 
     parser_cmp = subparsers.add_parser(
         'cmp', help='compare the topologies described in the input files and save the result to a file')
-    parser_cmp.add_argument('file1', help='input file1 path')
-    parser_cmp.add_argument('file2', help='input file2 path')
+    parser_cmp.add_argument(
+        'real_file', help='path to the file containing the real data')
+    parser_cmp.add_argument(
+        'decl_file', help='path to the file containing the declared data')
     parser_cmp.add_argument('result', help='result file path (default: %(default)s)',
                             nargs='?', default='./files/cmp/last.json')
-
-    # parser_cmp = subparsers.add_parser(
-    #     'cmp', help='compare the topologies described in the input files and save the result to a file. If only 2 files are specified, the following two topologies are compared: 1) from the input file; 2) real network topology.')
-    # parser_cmp.add_argument('file1', help='input file1 path')
-    # parser_cmp.add_argument(
-    #     'file2', help='input file2 path (if not specified, real topology is scanned)', nargs='?')
-    # parser_cmp.add_argument('result', help='result file path')
-
-    # parser.add_argument(
-    #     '-a', '--ip', help='IP address of the switch from which data collection begins')
 
     args = parser.parse_args()
 
     with open(args.config, 'r') as f:
-        config = hjson.load(f)
+        cnf = hjson.load(f)
 
     if args.operation == 'store':
-        ip = config['hosts'][0]['host']
-        path = args.file
-        expose_name_snmp = 'csw.*'
-        make_snapshot_snmp(ip, path, expose_name_snmp)
+        if args.source == 'real':
+            config.check_config_hosts(cnf)
+
+            hosts_cnf = cnf['hosts']
+            host_cnf = hosts_cnf[0]
+            ip = host_cnf['host']
+            limitations = host_cnf['limitations']
+
+            path = args.file
+
+            make_snapshot_snmp(ip, path, limitations)
+
+        elif args.source == 'declared':
+            config.check_config(cnf)
+
+            db_cnf = cnf['db']
+            db_host = db_cnf['host']
+            db_user = db_cnf['user']
+            db_pass = db_cnf['pass']
+            db_name = db_cnf['name']
+            node_db = db.NodeDB(db_host, db_user, db_pass, db_name)
+
+            hosts_cnf = cnf['hosts']
+            host_cnf = hosts_cnf[0]
+            ip = host_cnf['host']
+            limitations = host_cnf['limitations']
+
+            path = args.file
+
+            make_snapshot_db(ip, path, node_db, limitations)
 
     elif args.operation == 'nms':
-        ip = config['hosts'][0]['host']
+        config.check_config(cnf)
+
+        db_cnf = cnf['db']
+        db_host = db_cnf['host']
+        db_user = db_cnf['user']
+        db_pass = db_cnf['pass']
+        db_name = db_cnf['name']
+        node_db = db.NodeDB(db_host, db_user, db_pass, db_name)
+
+        hosts_cnf = cnf['hosts']
+        host_cnf = hosts_cnf[0]
+        ip = host_cnf['host']
+        limitations = host_cnf['limitations']
 
         real_path = './snapshots_snmp/snapshot.json'
         decl_path = './snapshots_db/snapshot.json'
         result_path = args.file
 
-        db_cfg = config['db']
-        db_host = db_cfg['host']
-        db_user = db_cfg['user']
-        db_pass = db_cfg['pass']
-        db_name = db_cfg['name']
-        node_db = db.NodeDB(db_host, db_user, db_pass, db_name)
-
-        expose_name_snmp = 'csw.*'
-        expose_name_db = 'csw%'
-
         compare_real_and_declared(
-            ip, real_path, decl_path, result_path, node_db, expose_name_snmp, expose_name_db)
+            ip, real_path, decl_path, result_path, node_db, limitations)
 
     elif args.operation == 'cmp':
-        path1 = args.file1
-        path2 = args.file2
+        real_path = args.real_file
+        decl_path = args.decl_file
         result_path = args.result
-        compare_from_files(path1, path2, result_path)
+        compare_from_files(real_path, decl_path, result_path)
