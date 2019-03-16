@@ -54,7 +54,7 @@ def load_snapshot(path):
     return read_file_json(path, node.decode)
 
 
-def combine_rows_to_one_node(rows):
+def combine_rows_to_one_node(rows, limitation):
     n = node.Node()
     if len(rows) == 0:
         return n
@@ -69,7 +69,9 @@ def combine_rows_to_one_node(rows):
         rem_port = row["rem_port"]
         rem_ip = row["rem_ip"]
 
-        n.rem_ips.append(rem_ip)
+        # ограничиваем обход согласно конфигу
+        if is_checked_port(loc_port, limitation):
+            n.rem_ips.append(rem_ip)
 
         n.ports[loc_port] = {
             "name": rem_name,
@@ -80,17 +82,39 @@ def combine_rows_to_one_node(rows):
     return n
 
 
-def is_limited_port(port, limitation):
-    check_ports = limitation['check_ports']
-    exclude_ports = limitation['exclude_ports']
-    if len(check_ports) == 0:
-        if len(exclude_ports) == 0:
-            return False
-        else:
-            if not port in exclude_ports:
-                return False
-    else:
-        if port in check_ports and not port in exclude_ports:
-            return False
+def find_limitation_by_host(host, limitations):
+    for l in limitations:
+        if l['host'] == host:
+            return l
+    return None
 
-    return True
+
+def find_limitation_by_alias(alias, limitations):
+    for l in limitations:
+        if alias in l['aliases']:
+            return l
+    return None
+
+
+def is_checked_port(port, limitation):
+    if limitation is None:
+        return True
+    else:
+        check_ports = limitation['check_ports']
+        exclude_ports = limitation['exclude_ports']
+        if len(check_ports) == 0 and len(exclude_ports) == 0:
+            return True
+        elif len(check_ports) == 0 and len(exclude_ports) != 0:
+            return not port in exclude_ports
+        elif len(check_ports) != 0 and len(exclude_ports) == 0:
+            return port in check_ports
+        elif len(check_ports) != 0 and len(exclude_ports) != 0:
+            return port in check_ports and not port in exclude_ports
+
+
+def get_host_by_alias(alias, limitations):
+    limitation = find_limitation_by_alias(alias, limitations)
+    if limitation is None:
+        return None
+    else:
+        return limitation['host']

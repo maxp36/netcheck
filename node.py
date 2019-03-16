@@ -18,8 +18,10 @@ class Node:
         self.rem_ips = []
         self.max_num_ports = 256
 
-    def fetch(self, limitation):
+    def fetch(self, limitations):
         engine = SnmpEngine()
+
+        limitation = utils.find_limitation_by_host(self.ip, limitations)
 
         # получение локальных данных коммутатора
         g = getCmd(engine,
@@ -30,11 +32,6 @@ class Node:
         vals = utils.get_snmp_var_binds(g)
         if len(vals) != 0:
             self.name = vals[0][1].prettyPrint()
-            # if re.fullmatch(expose_name, self.name):
-            #     self.ip = ""
-            #     self.name = ""
-            #     self.ports = {}
-            #     return
 
         # получение IP коммутаторов-соседей и номеров локальных портов, к которым они подключенны
         g = bulkCmd(engine,
@@ -50,12 +47,14 @@ class Node:
                 loc_port = int(tuple(oid)[-8])
                 rem_ip = ".".join([str(x) for x in tuple(oid)[-4:]])
 
+                # заменяем IP, являющийся алиасом на оригинальный IP
+                origin_host = utils.get_host_by_alias(rem_ip, limitations)
+                if not origin_host is None:
+                    rem_ip = origin_host
+
                 # ограничиваем обход согласно конфигу
-                if limitation is None:
+                if utils.is_checked_port(loc_port, limitation):
                     self.rem_ips.append(rem_ip)
-                else:
-                    if not utils.is_limited_port(loc_port, limitation):
-                        self.rem_ips.append(rem_ip)
 
                 # получение имени коммутатора-соседа на порту loc_port
                 gen = getCmd(engine,

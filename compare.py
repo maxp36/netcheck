@@ -1,5 +1,5 @@
-import utils
 import node
+import utils
 
 
 class NetworkComparator:
@@ -48,14 +48,12 @@ class NetworkComparator:
             return self.__compare_nodes(real, decl)
 
     def __compare_ints(self, real, decl):
-        # print("compare ints:\n", "real\n", real, "decl\n", decl)
         if real == decl:
             return {"matches": real}
         else:
             return {"differences": {"real": real, "declared": decl}}
 
     def __compare_strs(self, real, decl):
-        # print("compare string:\n", "real\n", real, "decl\n", decl)
         if real == decl:
             return {"matches": real}
         else:
@@ -65,9 +63,6 @@ class NetworkComparator:
         return self.__compare_entities(node.encode(real), node.encode(decl))
 
     def __compare_dicts(self, real, decl):
-
-        # print("compare dicts:\n", "real\n", real, "\ndecl\n", decl)
-
         state = {}
 
         if len(real.keys()) == 0 and len(decl.keys()) == 0:
@@ -86,15 +81,12 @@ class NetworkComparator:
 
             comp = self.__compare_entities(real[key], decl[key])
 
-            # print("comp\n", comp)
-
             if "differences" in comp.keys():
                 if not ("differences" in state.keys()):
                     state["differences"] = {}
                 if not ("difference" in state["differences"].keys()):
                     state["differences"]["difference"] = {}
                 state["differences"]["difference"][key] = comp
-            # else:
             elif "matches" in comp.keys():
                 if not ("matches" in state.keys()):
                     state["matches"] = {}

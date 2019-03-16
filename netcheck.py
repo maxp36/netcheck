@@ -14,26 +14,12 @@ import utils
 VERSION = 'v0.1.0'
 
 
-def find_limitations_by_ip(host, limitations):
-    for l in limitations:
-        if l['host'] == host:
-            return l
-    return None
-
-
 def fetch_nodes_snmp(ip, nodes, nodes_ips, limitations):
-    limitation = find_limitations_by_ip(ip, limitations)
-
     n = node.Node(ip)
-    n.fetch(limitation)
+    n.fetch(limitations)
     if not n.is_empty():
         nodes.append(n)
     nodes_ips.append(ip)
-
-    if not limitation is None:
-        aliases = limitation['aliases']
-        for a in aliases:
-            nodes_ips.append(a)
 
     for i in n.rem_ips:
         if not (i in nodes_ips):
@@ -44,21 +30,13 @@ def fetch_nodes_snmp(ip, nodes, nodes_ips, limitations):
 
 
 def fetch_nodes_db(ip, nodes, nodes_ips, node_db, limitations):
-    limitation = find_limitations_by_ip(ip, limitations)
+    limitation = utils.find_limitation_by_host(ip, limitations)
 
-    n = node_db.get_node(ip, limitation)
-    n = utils.combine_rows_to_one_node(n)
+    n = node_db.get_node(ip)
+    n = utils.combine_rows_to_one_node(n, limitation)
     if not n.is_empty():
         nodes.append(n)
     nodes_ips.append(ip)
-
-    # скорее всего бесполезно для опроса из БД,
-    # так как в БД каждый коммутатор имеет только один IP
-    # например csw2 имеет IP 172.16.0.2 (не виден по 172.16.44.1)
-    if not limitation is None:
-        aliases = limitation['aliases']
-        for a in aliases:
-            nodes_ips.append(a)
 
     for i in n.rem_ips:
         if not (i in nodes_ips) and not i is None:
