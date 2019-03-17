@@ -1,5 +1,4 @@
 import node
-import utils
 
 
 class NetworkComparator:

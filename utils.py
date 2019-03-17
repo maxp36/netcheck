@@ -1,21 +1,21 @@
-
 import errno
 import json
+import logging
 import os
-import time
 
 import node
 
 
 def get_snmp_var_binds(g):
+    logger = logging.getLogger(__name__)
     error_indication, error_status, error_index, var_binds = next(g)
 
     if error_indication:  # SNMP engine errors
-        print(error_indication)
+        logger.error(error_indication)
     else:
         if error_status:  # SNMP agent errors
-            print('%s at %s' % (error_status.prettyPrint(),
-                                var_binds[int(error_index)-1] if error_index else '?'))
+            logger.error('%s at %s' % (error_status.prettyPrint(),
+                                       var_binds[int(error_index)-1] if error_index else '?'))
         else:
             return var_binds
     return []

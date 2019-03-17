@@ -1,6 +1,5 @@
-
 import json
-import re
+import logging
 
 from pysnmp.hlapi import *
 from pysnmp.proto.rfc1902 import *
@@ -18,7 +17,10 @@ class Node:
         self.rem_ips = []
         self.max_num_ports = 256
 
+        self.logger = logging.getLogger(__name__)
+
     def fetch(self, limitations):
+        self.logger.info('getting switch information (%s) by LLDP' % self.ip)
         engine = SnmpEngine()
 
         limitation = utils.find_limitation_by_host(self.ip, limitations)

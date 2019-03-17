@@ -1,8 +1,6 @@
-import json
+import logging
 
 import pymysql.cursors
-
-import utils
 
 
 class NodeDB:
@@ -11,8 +9,10 @@ class NodeDB:
         self.user = user
         self.password = password
         self.db = db
+        self.logger = logging.getLogger(__name__)
 
     def get_node(self, ip):
+        self.logger.info('getting switch information (%s) from database' % ip)
         conn = pymysql.connect(host=self.host,
                                user=self.user,
                                password=self.password,
