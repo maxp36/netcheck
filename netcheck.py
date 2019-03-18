@@ -163,6 +163,10 @@ if __name__ == "__main__":
 
     logger = logging.getLogger(__name__)
 
+    if args.operation is None:
+        parser.print_help()
+        exit(0)
+        
     logger.info('start execution')
 
     if args.operation == 'store':

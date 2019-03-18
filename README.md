@@ -1,6 +1,31 @@
 # netcheck
 Comand-line utility to scan the network topology and find differences with a documented network structure
 
+## Requirements
+
+* [Python](https://www.python.org/) >= 3.5
+* [MySQL](https://www.mysql.com/) >= 5.5
+
+## Usage
+
+1. Clone the repository
+
+    ```bash
+    git clone https://github.com/maxp36/netcheck.git
+    ```
+
+2. Go to directory and install python dependencies
+
+    ```bash
+    cd netcheck/
+    pip install -r requirements.txt
+    ```
+
+3. Run netcheck
+
+    ```bash
+    python netcheck.py
+    ```
 
 ## netcheck config
 ### Basic config example
