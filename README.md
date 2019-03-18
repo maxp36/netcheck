@@ -20,8 +20,9 @@ Comand-line utility to scan the network topology and find differences with a doc
     cd netcheck/
     pip install -r requirements.txt
     ```
+3. Edit the configuration files in ./config directory
 
-3. Run netcheck
+4. Run netcheck
 
     ```bash
     python netcheck.py
