@@ -82,20 +82,6 @@ def combine_rows_to_one_node(rows, limitation):
     return n
 
 
-def find_limitation_by_host(host, limitations):
-    for l in limitations:
-        if l['host'] == host:
-            return l
-    return None
-
-
-def find_limitation_by_alias(alias, limitations):
-    for l in limitations:
-        if alias in l['aliases']:
-            return l
-    return None
-
-
 def is_checked_port(port, limitation):
     if limitation is None:
         return True
@@ -111,10 +97,3 @@ def is_checked_port(port, limitation):
         elif len(check_ports) != 0 and len(exclude_ports) != 0:
             return port in check_ports and not port in exclude_ports
 
-
-def get_host_by_alias(alias, limitations):
-    limitation = find_limitation_by_alias(alias, limitations)
-    if limitation is None:
-        return None
-    else:
-        return limitation['host']

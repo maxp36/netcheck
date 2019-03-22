@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import argparse
 import json
 import logging
@@ -15,58 +16,71 @@ import utils
 VERSION = 'v0.1.0'
 
 
-def fetch_nodes_snmp(ip, limitations, nodes=[], nodes_ips=[]):
+def fetch_nodes_snmp(ip, nodes, ips, aliases, limitations):
+    if ip in ips:
+        return nodes, ips
+
+    limitation = None
+    if ip in limitations.keys():
+        limitation = limitations[ip]
+
     n = node.Node(ip)
-    n.fetch(limitations)
+    n.fetch(aliases, limitation)
     if not n.is_empty():
         nodes.append(n)
-    nodes_ips.append(ip)
+    ips.append(ip)
 
     for i in n.rem_ips:
-        if not (i in nodes_ips):
-            nodes, nodes_ips = fetch_nodes_snmp(
-                i, limitations, nodes, nodes_ips)
+        nodes, ips = fetch_nodes_snmp(
+            i, nodes, ips, aliases, limitations)
 
-    return nodes, nodes_ips
+    return nodes, ips
 
 
-def fetch_nodes_db(ip, node_db, limitations, nodes=[], nodes_ips=[]):
-    limitation = utils.find_limitation_by_host(ip, limitations)
+def fetch_nodes_db(ip, nodes, ips, node_db, limitations):
+    if ip in ips:
+        return nodes, ips
+
+    limitation = None
+    if ip in limitations.keys():
+        limitation = limitations[ip]
 
     n = node_db.get_node(ip)
     n = utils.combine_rows_to_one_node(n, limitation)
     if not n.is_empty():
         nodes.append(n)
-    nodes_ips.append(ip)
+    ips.append(ip)
 
     for i in n.rem_ips:
-        if not (i in nodes_ips) and not i is None:
-            nodes, nodes_ips = fetch_nodes_db(
-                i, node_db, limitations, nodes, nodes_ips)
+        if not i is None:
+            nodes, ips = fetch_nodes_db(
+                i, nodes, ips, node_db, limitations)
 
-    return nodes, nodes_ips
+    return nodes, ips
 
 
-def get_nodes_snmp(start_ip, limitations):
+def get_nodes_snmp(start_ip, ips, aliases, limitations):
     logger = logging.getLogger(__name__)
     logger.info('getting switch information by LLDP')
     start = time.process_time()
-    nodes, nodes_ips = fetch_nodes_snmp(start_ip, limitations)
+    nodes = []
+    nodes, ips = fetch_nodes_snmp(start_ip, nodes, ips, aliases, limitations)
     elapsed_time = round(time.process_time() - start, 3)
     logger.info('received information about %s switches by LLDP in %s seconds', len(
         nodes), elapsed_time)
-    return nodes
+    return nodes, ips
 
 
-def get_nodes_db(start_ip, db, limitations):
+def get_nodes_db(start_ip, ips, db, limitations):
     logger = logging.getLogger(__name__)
     logger.info('getting switch information from database')
     start = time.process_time()
-    nodes, nodes_ips = fetch_nodes_db(start_ip, db, limitations)
+    nodes = []
+    nodes, ips = fetch_nodes_db(start_ip, nodes, ips, db, limitations)
     elapsed_time = round(time.process_time() - start, 3)
     logger.info('received information about %s switches from database in %s seconds', len(
         nodes), elapsed_time)
-    return nodes
+    return nodes, ips
 
 
 def compare_networks(real, decl):
@@ -86,21 +100,36 @@ def compare_networks(real, decl):
     return result
 
 
-def make_snapshot_snmp(start_ip, path, limitations):
-    nodes = get_nodes_snmp(start_ip, limitations)
-    utils.make_snapshot(path, nodes)
+def make_snapshot_snmp(hosts, path, aliases, limitations):
+    all = []
+    ips = []
+    for host in hosts:
+        nodes, ips = get_nodes_snmp(host, ips, aliases, limitations)
+        all.extend(nodes)
+    utils.make_snapshot(path, all)
 
 
-def make_snapshot_db(start_ip, path, db, limitations):
-    nodes = get_nodes_db(start_ip, db, limitations)
-    utils.make_snapshot(path, nodes)
+def make_snapshot_db(hosts, path, db, limitations):
+    all = []
+    ips = []
+    for host in hosts:
+        nodes, ips = get_nodes_db(host, ips, db, limitations)
+        all.extend(nodes)
+    utils.make_snapshot(path, all)
 
 
-def compare_real_and_declared(start_ip, path, db, limitations):
-    real = get_nodes_snmp(start_ip, limitations)
-    decl = get_nodes_db(start_ip, db, limitations)
+def compare_real_and_declared(hosts, path, db, aliases, limitations):
+    all_real = []
+    ips_real = []
+    all_decl = []
+    ips_decl = []
+    for host in hosts:
+        real, ips_real = get_nodes_snmp(host, ips_real, aliases, limitations)
+        all_real.extend(real)
+        decl, ips_decl = get_nodes_db(host, ips_decl, db, limitations)
+        all_decl.extend(decl)
 
-    result = compare_networks(real, decl)
+    result = compare_networks(all_real, all_decl)
     utils.make_snapshot(path, result)
 
 
@@ -154,8 +183,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    with open(args.config, 'r') as f:
-        cnf = hjson.load(f)
+    if args.operation is None:
+        parser.print_help()
+        exit(0)
+    if args.source is None:
+        parser_store.print_help()
+        exit(0)
 
     with open(args.logconfig, 'r') as f:
         log_config = hjson.load(f)
@@ -163,65 +196,41 @@ if __name__ == "__main__":
 
     logger = logging.getLogger(__name__)
 
-    if args.operation is None:
-        parser.print_help()
-        exit(0)
-        
+    with open(args.config, 'r') as f:
+        cnf = hjson.load(f)
+
+    config.check_config(cnf)
+
+    db_cnf = cnf['db']
+    db_host = db_cnf['host']
+    db_user = db_cnf['user']
+    db_pass = db_cnf['pass']
+    db_name = db_cnf['name']
+
+    hosts = set(cnf['hosts'])
+    aliases = cnf['aliases']
+    limitations = cnf['limitations']
+
     logger.info('start execution')
 
     if args.operation == 'store':
         if args.source == 'real':
             logger.info('"store real" command execution')
-            config.check_config_hosts(cnf)
-
-            hosts_cnf = cnf['hosts']
-            host_cnf = hosts_cnf[0]
-            ip = host_cnf['host']
-            limitations = host_cnf['limitations']
-
             path = args.file
-
-            make_snapshot_snmp(ip, path, limitations)
+            make_snapshot_snmp(hosts, path, aliases, limitations)
 
         elif args.source == 'declared':
             logger.info('"store declared" command execution')
-            config.check_config(cnf)
-
-            db_cnf = cnf['db']
-            db_host = db_cnf['host']
-            db_user = db_cnf['user']
-            db_pass = db_cnf['pass']
-            db_name = db_cnf['name']
             node_db = db.NodeDB(db_host, db_user, db_pass, db_name)
-
-            hosts_cnf = cnf['hosts']
-            host_cnf = hosts_cnf[0]
-            ip = host_cnf['host']
-            limitations = host_cnf['limitations']
-
             path = args.file
-
-            make_snapshot_db(ip, path, node_db, limitations)
+            make_snapshot_db(hosts, path, node_db, limitations)
 
     elif args.operation == 'nms':
         logger.info('"nms" command execution')
-        config.check_config(cnf)
-
-        db_cnf = cnf['db']
-        db_host = db_cnf['host']
-        db_user = db_cnf['user']
-        db_pass = db_cnf['pass']
-        db_name = db_cnf['name']
         node_db = db.NodeDB(db_host, db_user, db_pass, db_name)
-
-        hosts_cnf = cnf['hosts']
-        host_cnf = hosts_cnf[0]
-        ip = host_cnf['host']
-        limitations = host_cnf['limitations']
-
         result_path = args.file
-
-        compare_real_and_declared(ip, result_path, node_db, limitations)
+        compare_real_and_declared(
+            hosts, result_path, node_db, aliases, limitations)
 
     elif args.operation == 'cmp':
         logger.info('"cmp" command execution')

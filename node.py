@@ -19,11 +19,9 @@ class Node:
 
         self.logger = logging.getLogger(__name__)
 
-    def fetch(self, limitations):
+    def fetch(self, aliases, limitation):
         self.logger.info('getting switch information (%s) by LLDP' % self.ip)
         engine = SnmpEngine()
-
-        limitation = utils.find_limitation_by_host(self.ip, limitations)
 
         # получение локальных данных коммутатора
         g = getCmd(engine,
@@ -49,22 +47,25 @@ class Node:
                 loc_port = int(tuple(oid)[-8])
                 rem_ip = ".".join([str(x) for x in tuple(oid)[-4:]])
 
-                # заменяем IP, являющийся алиасом на оригинальный IP
-                origin_host = utils.get_host_by_alias(rem_ip, limitations)
-                if not origin_host is None:
-                    rem_ip = origin_host
-
-                # ограничиваем обход согласно конфигу
-                if utils.is_checked_port(loc_port, limitation):
-                    self.rem_ips.append(rem_ip)
-
                 # получение имени коммутатора-соседа на порту loc_port
                 gen = getCmd(engine,
                              CommunityData('unisnet'),
                              UdpTransportTarget((rem_ip, 161)),
                              ContextData(),
                              ObjectType(ObjectIdentity(oids.local_system_data_oids['lldpLocSysName'])))
-                rem_name = utils.get_snmp_var_binds(gen)[0][1].prettyPrint()
+                vs = utils.get_snmp_var_binds(gen)
+                if len(vs) != 0:
+                    rem_name = vs[0][1].prettyPrint()
+                else:
+                    continue
+
+                # заменяем IP на оригинальный IP, если так описано конфигурацией aliases
+                if rem_name in aliases.keys():
+                    rem_ip = aliases[rem_name]
+
+                # ограничиваем обход согласно конфигу
+                if utils.is_checked_port(loc_port, limitation):
+                    self.rem_ips.append(rem_ip)
 
                 if not (loc_port in self.ports.keys()):
                     self.ports[loc_port] = {}

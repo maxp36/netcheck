@@ -1,25 +1,30 @@
 {
   db: {
-    host: host
-    user: user
-    pass: pass
-    name: name
+    host: 94.230.160.137
+    user: nms_tplg
+    pass: choorohgae5Hiiy
+    name: nms
   }
 
   hosts: [
-    {
-      host: host
-      limitations: [
-        {
-          host: host
-          aliases: [
-            alias1
-            alias2
-          ]
-          check_ports: [port1, port2]
-          exclude_ports: [port3]
-        }
-      ]
-    }
+    172.16.0.2
+    172.16.0.2
   ]
+
+  aliases: {
+    csw2: 172.16.0.2
+  }
+
+  limitations: {
+    172.16.0.2: {
+      check_ports: [7, 10]
+      // exclude_ports:[]
+    }
+    172.16.44.7: {
+      exclude_ports:[28]
+    }
+    172.16.44.9: {
+      check_ports: [26]
+    }
+  }
 }
