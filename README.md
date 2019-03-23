@@ -42,46 +42,45 @@ Comand-line utility to scan the network topology and find differences with a doc
     }
 
     hosts: [
-        {
-            host: host
-            limitations: [
-                {
-                    host: host
-                    aliases: [
-                        alias1
-                        alias2
-                    ]
-                    check_ports: [port1, port2]
-                    exclude_ports: [port3]
-                }
-            ]
-        }
+        host1
+        host2
     ]
+
+    aliases: {
+        host_name: host
+    }
+
+    limitations: {
+        host1: {
+            check_ports: [port1, port2]
+            exclude_ports: [port3]
+        }
+        host2: {
+            exclude_ports: [port1]
+        }
+    }
 }
 ```
 
 ### Configuration file description
 The configuration file contains two objects at the top level:
 
-1. `db` - an object containing information about connecting to the database containing information about switches
+1. `db` - an object containing information about connecting to the database containing information about switches (required)
     1. `host` - address to connect to the database (required)
     2. `user` - db login username (required)
     3. `pass` - db login password (required)
     4. `name` - database name (required)
 
-2. `hosts` - array of `host` objects describing network scanning parameters
+2. `hosts` - an array of addresses from which to start scanning the network (required)
 
-Each `host` object contains the following fields:
+3. `aliases` - object containing information about the mapping of the name of the switch and its permanent address
 
-1. `host` - address of the switch that starts the network scan (required)
-2. `limitations` - an array of objects describing additional scanning limitations
+4. `limitations` - object containing additional scanning limitations for `host` object
 
-Each `limitation` object contains the following fields:
+    Each `host` object contains the following fields:
 
-1. `host` - address of the switch to which the limitations apply (required)
-2. `aliases` - an array of additional addresses that this switch can have
-3. `check_ports` - an array of port numbers from which you want to continue scanning neighbor switches
-4. `exclude_ports` - an array of port numbers from which scanning of neighbor switches should not continue
+    1. `check_ports` - an array of port numbers from which you want to continue scanning neighbor switches
+    2. `exclude_ports` - an array of port numbers from which scanning of neighbor switches should not continue
 
 The following cases are possible:
 
@@ -115,132 +114,104 @@ The following cases are possible:
 The structure of nesting fields in the result file is shown below.
 
 A field enclosed in square brackets (`[field]`) means that it may not be present in the result structure.
+`field...` means array of field.
 ```
-differences
-    [diff...]
+found
+    [host...]
         differences
-            [difference]
-                key...
-                    differences
-                        [difference]
-                            key...
-                                differences
-                                    [difference]
-                                        key...
-                                            differences
-                                                declared
-                                                real
-                                    [not found]
-                                        key...
-                                    [not declared]
-                                        key...
-                                [matches]
-                                    key...
-                        [not found]
-                            key...
-                        [not declared]
-                            key...
-                    [matches]
-                        key...
-            [not found]
-                key...
-            [not declared]
-                key...
-        [matches]
-            key...
-matches
-    [node...]
-not found
-    [node...]
+            [key...]
+                declared
+                real
+        matches
+            [key...]
+        not declared
+            [key...]
+        not found
+            [key...]
 not declared
-    [node...]
+    [host...]
+        key...
+not found
+    [host...]
+        key...
 ```
 
 ### Result example
 ```json
 {
-    "differences": [
-        {
+    "found": {
+        "172.16.44.9": {
             "differences": {
-                "difference": {
-                    "ports": {
-                        "differences": {
-                            "difference": {
-                                "25": {
-                                    "differences": {
-                                        "difference": {
-                                            "port": {
-                                                "differences": {
-                                                    "declared": 25,
-                                                    "real": 26
-                                                }
-                                            }
-                                        }
-                                    },
-                                    "matches": {
-                                        "ip": "172.16.44.3",
-                                        "name": "sw104"
-                                    }
-                                }
-                            },
-                            "not declared": {
-                                "15": {
-                                    "ip": "172.16.44.14",
-                                    "name": "sw50",
-                                    "port": 26
-                                }
-                            },
-                            "not found": {
-                                "26": {
-                                    "ip": "172.16.44.13",
-                                    "name": "sw51",
-                                    "port": 26
-                                }
-                            }
-                        },
-                        "matches": {
-                            "16": {
-                                "ip": "172.16.44.19",
-                                "name": "sw81",
-                                "port": 26
-                            }
+                "ports": {
+                    "26": {
+                        "port": {
+                            "declared": 26,
+                            "real": 25
                         }
                     }
                 }
             },
             "matches": {
-                "ip": "172.16.44.2",
-                "name": "sw156"
+                "ip": "172.16.44.9",
+                "name": "sw168",
+                "ports": {
+                    "25": {
+                        "ip": "172.16.44.13",
+                        "name": "sw62",
+                        "port": 27
+                    },
+                    "26": {
+                        "ip": "172.16.44.10",
+                        "name": "sw76"
+                    }
+                }
+            },
+            "not declared": {
+                "ports": {
+                    "27": {
+                        "ip": "172.16.44.16",
+                        "name": "sw63",
+                        "port": 25
+                    }
+                }
+            },
+            "not found": {
+                "ports": {
+                    "28": {
+                        "ip": "172.16.44.78",
+                        "name": "sw06102",
+                        "port": 27
+                    }
+                }
             }
         }
-    ],
-    "matches": [
-        {
-            "ip": "172.16.44.8",
-            "name": "sw102",
+    },
+    "not declared": {
+        "172.16.44.777": {
+            "ip": "172.16.44.777",
+            "name": "sw777",
             "ports": {
                 "25": {
-                    "ip": "172.16.44.13",
-                    "name": "sw62",
+                    "ip": "172.16.44.14",
+                    "name": "sw50",
                     "port": 26
                 }
             }
         }
-    ],
-    "not declared": [
-        {
-            "ip": "172.16.44.88",
-            "name": "sw18",
+    },
+    "not found": {
+        "172.16.44.188": {
+            "ip": "172.16.44.188",
+            "name": "sw64333",
             "ports": {
-                "25": {
-                    "ip": "172.16.44.13",
-                    "name": "sw6",
+                "26": {
+                    "ip": "172.16.44.14",
+                    "name": "sw50",
                     "port": 26
                 }
             }
         }
-    ],
-    "not found": []
+    }
 }
 ```
 

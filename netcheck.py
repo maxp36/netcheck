@@ -91,11 +91,7 @@ def compare_networks(real, decl):
     result = nc.compare(real, decl)
     elapsed_time = round(time.process_time() - start, 3)
 
-    is_diff = False
-    if len(result['differences']) != 0 or len(result['not declared']) != 0 or len(result['not found']) != 0:
-        is_diff = True
-    logger.info(
-        'comparison performed in %s seconds. Topologies are different: %s', elapsed_time, is_diff)
+    logger.info('comparison performed in %s seconds', elapsed_time)
 
     return result
 
@@ -185,9 +181,6 @@ if __name__ == "__main__":
 
     if args.operation is None:
         parser.print_help()
-        exit(0)
-    if args.source is None:
-        parser_store.print_help()
         exit(0)
 
     with open(args.logconfig, 'r') as f:
