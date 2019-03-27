@@ -24,7 +24,23 @@ class NetworkComparator:
             if d is None:
                 state["not declared"][r.ip] = node.encode(r)
 
-        return state
+        is_diff = self.__is_diff(state)
+
+        return state, is_diff
+
+    def __is_diff(self, state):
+        is_diff = False
+        if len(state['not found']) != 0 or len(state['not declared']) != 0:
+            is_diff = True
+        
+        for k, v in state['found'].items():
+            if len(v['differences']) != 0 or len(v['not found']) != 0 or len(v['not declared']) != 0:
+                is_diff = True
+                break
+        
+        return is_diff
+
+        
 
     def __compare_entities(self, real, decl):
         if not isinstance(real, type(decl)):

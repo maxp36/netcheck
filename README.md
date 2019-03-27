@@ -25,8 +25,43 @@ Comand-line utility to scan the network topology and find differences with a doc
 4. Run netcheck
 
     ```bash
-    python netcheck.py
+    ./netcheck.py
     ```
+
+## Comand exapmles
+To show the help message run
+```bash
+./netcheck.py
+```
+or
+```bash
+./netcheck.py -h
+```
+
+To perform a network scan and save the result to a file run
+1. to scan real topology:
+    ```bash
+    ./netcheck.py store real
+    ```
+2. to scan declared topology:
+    ```bash
+    ./netcheck.py store declared
+    ```
+
+To scan the real and documented network, compare the topologies and write the comparison result to a file run
+```bash
+./netcheck.py nms
+```
+
+To compare the topologies described in the input files and save the result to a file run
+```bash
+./netcheck.py cmp PATH1 PATH2
+```
+
+For more informatioon about operation run
+```bash
+./netcheck.py OPERATION -h
+```
 
 ## netcheck config
 ### Basic config example

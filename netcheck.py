@@ -88,12 +88,12 @@ def compare_networks(real, decl):
     logger.info('network comparison')
     nc = compare.NetworkComparator()
     start = time.process_time()
-    result = nc.compare(real, decl)
+    result, is_diff = nc.compare(real, decl)
     elapsed_time = round(time.process_time() - start, 3)
 
-    logger.info('comparison performed in %s seconds', elapsed_time)
+    logger.info('comparison performed in %s seconds. Networks are different: %s', elapsed_time, is_diff)
 
-    return result
+    return result, is_diff
 
 
 def make_snapshot_snmp(hosts, path, aliases, limitations):
@@ -125,16 +125,20 @@ def compare_real_and_declared(hosts, path, db, aliases, limitations):
         decl, ips_decl = get_nodes_db(host, ips_decl, db, limitations)
         all_decl.extend(decl)
 
-    result = compare_networks(all_real, all_decl)
+    result, is_diff = compare_networks(all_real, all_decl)
     utils.make_snapshot(path, result)
+
+    return is_diff
 
 
 def compare_from_files(real_path, decl_path, result_path):
     real = utils.load_snapshot(real_path)
     decl = utils.load_snapshot(decl_path)
 
-    result = compare_networks(real, decl)
+    result, is_diff = compare_networks(real, decl)
     utils.make_snapshot(result_path, result)
+
+    return is_diff
 
 
 if __name__ == "__main__":
@@ -222,12 +226,16 @@ if __name__ == "__main__":
         logger.info('"nms" command execution')
         node_db = db.NodeDB(db_host, db_user, db_pass, db_name)
         result_path = args.file
-        compare_real_and_declared(
+        is_diff = compare_real_and_declared(
             hosts, result_path, node_db, aliases, limitations)
+        if is_diff:
+            exit(2)
 
     elif args.operation == 'cmp':
         logger.info('"cmp" command execution')
         real_path = args.real_file
         decl_path = args.decl_file
         result_path = args.result
-        compare_from_files(real_path, decl_path, result_path)
+        is_diff = compare_from_files(real_path, decl_path, result_path)
+        if is_diff:
+            exit(2)
