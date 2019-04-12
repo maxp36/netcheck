@@ -16,7 +16,7 @@ import utils
 VERSION = 'v0.1.0'
 
 
-def fetch_nodes_snmp(ip, nodes, ips, aliases, limitations):
+def fetch_nodes_snmp(ip, nodes, ips, community, aliases, limitations):
     if ip in ips:
         return nodes, ips
 
@@ -25,14 +25,14 @@ def fetch_nodes_snmp(ip, nodes, ips, aliases, limitations):
         limitation = limitations[ip]
 
     n = node.Node(ip)
-    n.fetch(aliases, limitation)
+    n.fetch(community, aliases, limitation)
     if not n.is_empty():
         nodes.append(n)
     ips.append(ip)
 
     for i in n.rem_ips:
         nodes, ips = fetch_nodes_snmp(
-            i, nodes, ips, aliases, limitations)
+            i, nodes, ips, community, aliases, limitations)
 
     return nodes, ips
 
@@ -59,12 +59,12 @@ def fetch_nodes_db(ip, nodes, ips, node_db, limitations):
     return nodes, ips
 
 
-def get_nodes_snmp(start_ip, ips, aliases, limitations):
+def get_nodes_snmp(start_ip, ips, community, aliases, limitations):
     logger = logging.getLogger(__name__)
     logger.info('getting switch information by LLDP')
     start = time.process_time()
     nodes = []
-    nodes, ips = fetch_nodes_snmp(start_ip, nodes, ips, aliases, limitations)
+    nodes, ips = fetch_nodes_snmp(start_ip, nodes, ips, community, aliases, limitations)
     elapsed_time = round(time.process_time() - start, 3)
     logger.info('received information about %s switches by LLDP in %s seconds', len(
         nodes), elapsed_time)
@@ -96,11 +96,11 @@ def compare_networks(real, decl):
     return result, is_diff
 
 
-def make_snapshot_snmp(hosts, path, aliases, limitations):
+def make_snapshot_snmp(community, hosts, path, aliases, limitations):
     all = []
     ips = []
     for host in hosts:
-        nodes, ips = get_nodes_snmp(host, ips, aliases, limitations)
+        nodes, ips = get_nodes_snmp(host, ips, community, aliases, limitations)
         all.extend(nodes)
     utils.make_snapshot(path, all)
 
@@ -114,13 +114,13 @@ def make_snapshot_db(hosts, path, db, limitations):
     utils.make_snapshot(path, all)
 
 
-def compare_real_and_declared(hosts, path, db, aliases, limitations):
+def compare_real_and_declared(community, hosts, path, db, aliases, limitations):
     all_real = []
     ips_real = []
     all_decl = []
     ips_decl = []
     for host in hosts:
-        real, ips_real = get_nodes_snmp(host, ips_real, aliases, limitations)
+        real, ips_real = get_nodes_snmp(host, ips_real, community, aliases, limitations)
         all_real.extend(real)
         decl, ips_decl = get_nodes_db(host, ips_decl, db, limitations)
         all_decl.extend(decl)
@@ -204,6 +204,8 @@ if __name__ == "__main__":
     db_pass = db_cnf['pass']
     db_name = db_cnf['name']
 
+    community = cnf['snmp']['community']
+
     hosts = set(cnf['hosts'])
     aliases = cnf['aliases']
     limitations = cnf['limitations']
@@ -214,7 +216,7 @@ if __name__ == "__main__":
         if args.source == 'real':
             logger.info('"store real" command execution')
             path = args.file
-            make_snapshot_snmp(hosts, path, aliases, limitations)
+            make_snapshot_snmp(community, hosts, path, aliases, limitations)
 
         elif args.source == 'declared':
             logger.info('"store declared" command execution')
@@ -227,7 +229,7 @@ if __name__ == "__main__":
         node_db = db.NodeDB(db_host, db_user, db_pass, db_name)
         result_path = args.file
         is_diff = compare_real_and_declared(
-            hosts, result_path, node_db, aliases, limitations)
+            community, hosts, result_path, node_db, aliases, limitations)
         if is_diff:
             exit(2)
 

@@ -6,6 +6,10 @@
         name: name
     }
 
+    snmp: {
+        community: community
+    }
+
     hosts: [
         host1
         host2

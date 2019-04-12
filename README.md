@@ -76,6 +76,10 @@ For more informatioon about operation run
         name: name
     }
 
+    snmp: {
+        community: community
+    }
+
     hosts: [
         host1
         host2
@@ -106,11 +110,14 @@ The configuration file contains two objects at the top level:
     3. `pass` - db login password (required)
     4. `name` - database name (required)
 
-2. `hosts` - an array of addresses from which to start scanning the network (required)
+2. `snmp` - an object containing SNMP connecting information (required)
+    1. `community` - SNMP community parameter
 
-3. `aliases` - object containing information about the mapping of the name of the switch and its permanent address
+3. `hosts` - an array of addresses from which to start scanning the network (required)
 
-4. `limitations` - object containing additional scanning limitations for `host` object
+4. `aliases` - object containing information about the mapping of the name of the switch and its permanent address
+
+5. `limitations` - object containing additional scanning limitations for `host` object
 
     Each `host` object contains the following fields:
 

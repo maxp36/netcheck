@@ -19,13 +19,13 @@ class Node:
 
         self.logger = logging.getLogger(__name__)
 
-    def fetch(self, aliases, limitation):
+    def fetch(self, community, aliases, limitation):
         self.logger.info('getting switch information (%s) by LLDP' % self.ip)
         engine = SnmpEngine()
 
         # получение локальных данных коммутатора
         g = getCmd(engine,
-                   CommunityData('unisnet'),
+                   CommunityData(community),
                    UdpTransportTarget((self.ip, 161)),
                    ContextData(),
                    ObjectType(ObjectIdentity(oids.local_system_data_oids['lldpLocSysName'])))
@@ -35,7 +35,7 @@ class Node:
 
         # получение IP коммутаторов-соседей и номеров локальных портов, к которым они подключенны
         g = bulkCmd(engine,
-                    CommunityData('unisnet'),
+                    CommunityData(community),
                     UdpTransportTarget((self.ip, 161)),
                     ContextData(),
                     0, self.max_num_ports,
@@ -49,7 +49,7 @@ class Node:
 
                 # получение имени коммутатора-соседа на порту loc_port
                 gen = getCmd(engine,
-                             CommunityData('unisnet'),
+                             CommunityData(community),
                              UdpTransportTarget((rem_ip, 161)),
                              ContextData(),
                              ObjectType(ObjectIdentity(oids.local_system_data_oids['lldpLocSysName'])))
@@ -79,7 +79,7 @@ class Node:
 
         # получение описания и номера порта коммутатора-соседа на определенном локальном порту
         g = bulkCmd(engine,
-                    CommunityData('unisnet'),
+                    CommunityData(community),
                     UdpTransportTarget((self.ip, 161)),
                     ContextData(),
                     0, self.max_num_ports,

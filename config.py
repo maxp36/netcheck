@@ -7,6 +7,7 @@ def check_config(config):
     logger = logging.getLogger(__name__)
     logger.info('netcheck configuration file check')
     check_config_db(config)
+    check_config_snmp(config)
     check_config_hosts(config)
     check_config_aliases(config)
     check_config_limitations(config)
@@ -38,6 +39,26 @@ def check_config_db(config):
         exit(1)
     if not 'name' in config_db:
         logger.error('%s "%s" field not defined' % (config_err_text, 'name'))
+        exit(1)
+
+
+def check_config_snmp(config):
+    logger = logging.getLogger(__name__)
+    logger.info('snmp configuration check')
+    config_err_text = 'config error:'
+    if not 'snmp' in config:
+        logger.error('%s "%s" field not defined' % (config_err_text, 'snmp'))
+        exit(1)
+
+    config_snmp = config['snmp']
+    if not isinstance(config_snmp, dict):
+        logger.error('%s "%s" field should be a dict' %
+                     (config_err_text, 'snmp'))
+        exit(1)
+
+    config_err_text = 'snmp config error:'
+    if not 'community' in config_snmp:
+        logger.error('%s "%s" field not defined' % (config_err_text, 'community'))
         exit(1)
 
 
