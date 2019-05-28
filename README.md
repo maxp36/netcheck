@@ -81,12 +81,12 @@ For more informatioon about operation run
     }
 
     hosts: [
-        host1
-        host2
+        host1_address
+        host2_address
     ]
 
     aliases: {
-        host_name: host
+        host_name: host_address
     }
 
     limitations: {
@@ -113,9 +113,9 @@ The configuration file contains two objects at the top level:
 2. `snmp` - an object containing SNMP connecting information (required)
     1. `community` - SNMP community parameter
 
-3. `hosts` - an array of addresses from which to start scanning the network (required)
+3. `hosts` - an array of ipv4 addresses from which to start scanning the network (required)
 
-4. `aliases` - object containing information about the mapping of the name of the switch and its permanent address
+4. `aliases` - object containing information about the mapping of the name of the switch and its permanent ipv4 address
 
 5. `limitations` - object containing additional scanning limitations for `host` object
 
@@ -256,4 +256,3 @@ not found
     }
 }
 ```
-
