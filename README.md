@@ -90,11 +90,11 @@ For more informatioon about operation run
     }
 
     limitations: {
-        host1: {
+        host1_address: {
             check_ports: [port1, port2]
             exclude_ports: [port3]
         }
-        host2: {
+        host2_address: {
             exclude_ports: [port1]
         }
     }
@@ -117,9 +117,9 @@ The configuration file contains two objects at the top level:
 
 4. `aliases` - object containing information about the mapping of the name of the switch and its permanent ipv4 address
 
-5. `limitations` - object containing additional scanning limitations for `host` object
+5. `limitations` - object containing additional scanning limitations for `host_address` object
 
-    Each `host` object contains the following fields:
+    Each `host_address` object contains the following fields:
 
     1. `check_ports` - an array of port numbers from which you want to continue scanning neighbor switches
     2. `exclude_ports` - an array of port numbers from which scanning of neighbor switches should not continue
