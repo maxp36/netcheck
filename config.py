@@ -2,6 +2,8 @@ import logging
 
 import hjson
 
+import utils
+
 
 def check_config(config):
     logger = logging.getLogger(__name__)
@@ -58,7 +60,8 @@ def check_config_snmp(config):
 
     config_err_text = 'snmp config error:'
     if not 'community' in config_snmp:
-        logger.error('%s "%s" field not defined' % (config_err_text, 'community'))
+        logger.error('%s "%s" field not defined' %
+                     (config_err_text, 'community'))
         exit(1)
 
 
@@ -98,17 +101,29 @@ def check_config_limitations(config):
     if not 'limitations' in config:
         config['limitations'] = {}
 
-    config_limitations = config['limitations']
-    if not isinstance(config_limitations, dict):
+    config_limitations_snmp = config['limitations_snmp']
+    if not isinstance(config_limitations_snmp, dict):
         logger.error('%s "%s" field should be a dict' %
-                     (config_err_text, 'limitations'))
+                     (config_err_text, 'limitations_snmp'))
         exit(1)
 
-    for key, config_limitation in config_limitations.items():
+    for key, config_limitation in config_limitations_snmp.items():
         check_config_limitation(config_limitation)
-        config_limitations[key] = config_limitation
+        config_limitations_snmp[key] = config_limitation
 
-    config['limitations'] = config_limitations
+    config['limitations_snmp'] = config_limitations_snmp
+
+    config_limitations_db = config['limitations_db']
+    if not isinstance(config_limitations_db, dict):
+        logger.error('%s "%s" field should be a dict' %
+                     (config_err_text, 'limitations_db'))
+        exit(1)
+
+    for key, config_limitation in config_limitations_db.items():
+        check_config_limitation(config_limitation)
+        config_limitations_db[key] = config_limitation
+
+    config['limitations_db'] = config_limitations_db
 
 
 def check_config_limitation(config):
@@ -121,16 +136,21 @@ def check_config_limitation(config):
         exit(1)
 
     if not 'check_ports' in config:
-        config['check_ports'] = []
+        config['check_ports'] = ""
     if not 'exclude_ports' in config:
-        config['exclude_ports'] = []
+        config['exclude_ports'] = ""
 
-    if not isinstance(config['check_ports'], list):
-        logger.error('%s "%s" field should be a list' %
+    if not isinstance(config['check_ports'], str):
+        logger.error('%s "%s" field should be a string' %
                      (config_err_text, 'check_ports'))
         exit(1)
 
-    if not isinstance(config['exclude_ports'], list):
-        logger.error('%s "%s" field should be a list' %
+    if not isinstance(config['exclude_ports'], str):
+        logger.error('%s "%s" field should be a string' %
                      (config_err_text, 'exclude_ports'))
         exit(1)
+
+    config['check_ports'] = utils.decode_limitation_ports(
+        config['check_ports'])
+    config['exclude_ports'] = utils.decode_limitation_ports(
+        config['exclude_ports'])

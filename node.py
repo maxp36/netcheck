@@ -29,7 +29,7 @@ class Node:
                    UdpTransportTarget((self.ip, 161)),
                    ContextData(),
                    ObjectType(ObjectIdentity(oids.local_system_data_oids['lldpLocSysName'])))
-        vals = utils.get_snmp_var_binds(g)
+        vals = utils.get_snmp_var_binds(g, self.ip)
         if len(vals) != 0:
             self.name = vals[0][1].prettyPrint()
 
@@ -40,7 +40,7 @@ class Node:
                     ContextData(),
                     0, self.max_num_ports,
                     ObjectType(ObjectIdentity(oids.local_system_data_oids['lldpRemManAddrIfSubtype'])))
-        vals = utils.get_snmp_var_binds(g)
+        vals = utils.get_snmp_var_binds(g, self.ip)
         if len(vals) != 0:
             oid = vals[0][0]
             while tuple(oid)[-10] == 3:
@@ -53,7 +53,7 @@ class Node:
                              UdpTransportTarget((rem_ip, 161)),
                              ContextData(),
                              ObjectType(ObjectIdentity(oids.local_system_data_oids['lldpLocSysName'])))
-                vs = utils.get_snmp_var_binds(gen)
+                vs = utils.get_snmp_var_binds(gen, self.ip)
                 if len(vs) != 0:
                     rem_name = vs[0][1].prettyPrint()
                 else:
@@ -71,7 +71,7 @@ class Node:
                     self.ports[loc_port] = {}
                 self.ports[loc_port]["ip"] = rem_ip
                 self.ports[loc_port]["name"] = rem_name
-                vals = utils.get_snmp_var_binds(g)
+                vals = utils.get_snmp_var_binds(g, self.ip)
                 if len(vals) != 0:
                     oid = vals[0][0]
                 else:
@@ -84,7 +84,7 @@ class Node:
                     ContextData(),
                     0, self.max_num_ports,
                     ObjectType(ObjectIdentity(oids.local_system_data_oids['lldpRemPortDesc'])))
-        vals = utils.get_snmp_var_binds(g)
+        vals = utils.get_snmp_var_binds(g, self.ip)
         if len(vals) != 0:
             oid, desc = vals[0][0], vals[0][1].prettyPrint()
             while tuple(oid)[-4] == 8:
@@ -95,7 +95,7 @@ class Node:
                 self.ports[loc_port]["port"] = rem_port
                 # self.ports[loc_port]["portDesc"] = desc
 
-                vals = utils.get_snmp_var_binds(g)
+                vals = utils.get_snmp_var_binds(g, self.ip)
                 if len(vals) != 0:
                     oid, desc = vals[0][0], vals[0][1].prettyPrint()
                 else:

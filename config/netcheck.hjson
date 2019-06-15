@@ -11,21 +11,38 @@
     }
 
     hosts: [
-        host1
-        host2
+        host1_address
+        host2_address
     ]
 
     aliases: {
         host_name: host
     }
 
-    limitations: {
-        host1: {
-            check_ports: [port1, port2]
-            exclude_ports: [port3]
+    limitations_snmp: {
+        host1_address: {
+            check_ports: port1 port2
+            exclude_ports: "port3"
         }
-        host2: {
-            exclude_ports: [port1]
+        host2_address: {
+            exclude_ports:
+            '''
+                port1
+                port2-port5 port7
+            '''
+        }
+    }
+    limitations_db: {
+        host1_address: {
+            check_ports: port1 port2
+            exclude_ports: ""
+        }
+        host2_address: {
+            exclude_ports:
+            '''
+                port1
+                port2-port5 port7
+            '''
         }
     }
 }

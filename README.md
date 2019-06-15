@@ -37,23 +37,27 @@ or
 ```bash
 ./netcheck.py -h
 ```
+or
+```bash
+./netcheck.py --help
+```
 
 To perform a network scan and save the result to a file run
-1. to scan real topology:
+1. to scan real topology and save to `./files/store/real/last.json` by default:
     ```bash
     ./netcheck.py store real
     ```
-2. to scan declared topology:
+2. to scan declared topology and save to `./files/store/declared/last.json` by default:
     ```bash
     ./netcheck.py store declared
     ```
 
-To scan the real and documented network, compare the topologies and write the comparison result to a file run
+To scan the real and documented network, compare the topologies and save result to `./files/nms/last.json` by default run
 ```bash
 ./netcheck.py nms
 ```
 
-To compare the topologies described in the input files and save the result to a file run
+To compare the topologies described in the input files and save result to `./files/cmp/last.json` by default run
 ```bash
 ./netcheck.py cmp PATH1 PATH2
 ```
@@ -86,16 +90,33 @@ For more informatioon about operation run
     ]
 
     aliases: {
-        host_name: host_address
+        host_name: host
     }
 
-    limitations: {
+    limitations_snmp: {
         host1_address: {
-            check_ports: [port1, port2]
-            exclude_ports: [port3]
+            check_ports: port1 port2
+            exclude_ports: "port3"
         }
         host2_address: {
-            exclude_ports: [port1]
+            exclude_ports:
+            '''
+                port1
+                port2-port5 port7
+            '''
+        }
+    }
+    limitations_db: {
+        host1_address: {
+            check_ports: port1 port2
+            exclude_ports: ""
+        }
+        host2_address: {
+            exclude_ports:
+            '''
+                port1
+                port2-port5 port7
+            '''
         }
     }
 }
@@ -117,12 +138,12 @@ The configuration file contains two objects at the top level:
 
 4. `aliases` - object containing information about the mapping of the name of the switch and its permanent ipv4 address
 
-5. `limitations` - object containing additional scanning limitations for `host_address` object
+5. `limitations_snmp` and `limitations_db` - objects containing additional scanning limitations for `host_address` object
 
     Each `host_address` object contains the following fields:
 
-    1. `check_ports` - an array of port numbers from which you want to continue scanning neighbor switches
-    2. `exclude_ports` - an array of port numbers from which scanning of neighbor switches should not continue
+    1. `check_ports` - a string with port numbers or intervals from which you want to continue scanning neighbor switches
+    2. `exclude_ports` - an array of port numbers or intervals from which scanning of neighbor switches should not continue
 
 The following cases are possible:
 

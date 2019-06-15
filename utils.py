@@ -6,15 +6,15 @@ import os
 import node
 
 
-def get_snmp_var_binds(g):
+def get_snmp_var_binds(g, ip):
     logger = logging.getLogger(__name__)
     error_indication, error_status, error_index, var_binds = next(g)
 
     if error_indication:  # SNMP engine errors
-        logger.error(error_indication)
+        logger.error('ip: %s; error: %s' % (ip, error_indication))
     else:
         if error_status:  # SNMP agent errors
-            logger.error('%s at %s' % (error_status.prettyPrint(),
+            logger.error('ip: %s; error: %s at %s' % (ip, error_status.prettyPrint(),
                                        var_binds[int(error_index)-1] if error_index else '?'))
         else:
             return var_binds
@@ -97,3 +97,38 @@ def is_checked_port(port, limitation):
         elif len(check_ports) != 0 and len(exclude_ports) != 0:
             return port in check_ports and not port in exclude_ports
 
+def decode_limitation_ports(input):
+    # 1 2(space)
+    # 3-6
+    # 7
+
+    input = input.split()        
+    # ["1 2 ", "3-6", "7"]
+
+    tmp = []
+    for s in input:
+        t = s.strip().split()
+        tmp.extend(t)
+    # ["1", "2", "3-6", "7"]
+
+    ret = []
+    for s in tmp:
+        p = s.split('-')
+        if len(p) == 1 :
+            ret.append(int(p[0]))
+        elif len(p) == 2 :
+            arr = fill_interval(int(p[0]), int(p[1]))
+            ret.extend(arr)
+    # [1, 2, 3, 4, 5, 6, 7]
+
+    return ret
+
+def fill_interval(start, end):
+    ret = []
+    if start > end :
+        start, end = end, start
+    while start <= end:
+        ret.append(start)
+        start += 1
+
+    return ret
